@@ -43,6 +43,7 @@ public class BaseHttpResponse<T>
     }
 }
 
+[DisplayName("HttpResponse")]
 public class BaseHttpResponse : BaseHttpResponse<object?>
 {
     public BaseHttpResponse(string message, HttpStatusCode code, bool success) : base(message, code, success) { }
@@ -86,7 +87,6 @@ public class BadRequest<T> : BaseHttpResponse<T>
 
     public BadRequest(string message, T? data) : base(message, HttpStatusCode.BadRequest, false, data) { }
 }
-
 
 public class Created<T> : BaseHttpResponse<T>
 {

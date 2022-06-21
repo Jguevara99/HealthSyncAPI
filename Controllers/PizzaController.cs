@@ -22,7 +22,7 @@ public class PizzaController : ControllerBase
     public IActionResult Get(int id)
     {
         Pizza? pizza = PizzaService.Get(id);
-        return pizza == null ? throw new HttpException("pizza not found!", StatusCodes.Status404NotFound) : Ok(pizza);
+        return pizza == null ? throw new HttpException("Pizza not found!", StatusCodes.Status404NotFound) : Ok(pizza);
     }
 
     [HttpPost]
