@@ -1,17 +1,12 @@
 using ContosoPizza.Middlewares.Extensions;
-using ContosoPizza.Extensions.Swagger;
+using ContosoPizza.Extensions.ServiceCollection;
 
 var builder = WebApplication.CreateBuilder(args);
+// IConfiguration configuration = builder.Configuration;
 
 // Add services to the container.
-
-builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddEndpointsApiExplorer();
-
-builder.Services.AddSwaggerGen(swagger => {
-    swagger.UseCustomGeneratorSchemaIds();
-});
+builder.Services
+    .AddConfig(builder.Configuration);
 
 var app = builder.Build();
 
@@ -26,6 +21,8 @@ if (app.Environment.IsDevelopment())
 app.UseCustomExceptionHandlerMiddleware();
 
 app.UseHttpsRedirection();
+
+app.UseAuthentication();
 
 app.UseAuthorization();
 
