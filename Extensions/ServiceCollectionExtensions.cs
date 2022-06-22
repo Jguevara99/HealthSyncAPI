@@ -1,5 +1,6 @@
 using ContosoPizza.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using ContosoPizza.Extensions.Swagger;
@@ -25,6 +26,7 @@ public static class ServiceCollectionExtension
             {
                 options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
                 options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
             })
             .AddJwtBearer(options =>
             {
@@ -49,6 +51,10 @@ public static class ServiceCollectionExtension
                 ),
                 ServiceLifetime.Singleton
             );
+        
+        services.AddIdentity<ApplicationUser, ApplicationRole>()
+                .AddEntityFrameworkStores<ApplicationDbContext>()
+                .AddDefaultTokenProviders();
 
         services.Configure<AppSettings>(configuration);
         services.Configure<JWT>(configuration.GetSection("JWT"));
