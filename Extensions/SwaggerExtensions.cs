@@ -1,4 +1,6 @@
 using System.ComponentModel;
+using ContosoPizza.Filters;
+using Microsoft.OpenApi.Models;
 using SwaggerNamespace = Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace ContosoPizza.Extensions.Swagger;
@@ -29,5 +31,35 @@ public static class SwaggerExtensions
                   .OfType<DisplayNameAttribute>()
                   .FirstOrDefault()?.DisplayName ?? schema.Name;
         });
+    }
+
+    public static void SetupSecurityDefinitions(this SwaggerNamespace.SwaggerGenOptions options)
+    {
+        // Setup custom operator filter
+        // set as secure API only when it has the authorize attribute.
+        options.OperationFilter<SwaggerAuthorizationOperationFilter>();
+
+        var securityScheme = new OpenApiSecurityScheme
+        {
+            In = ParameterLocation.Header,
+            Description = "Please enter a valid token",
+            Name = "Authorization",
+            Type = SecuritySchemeType.Http,
+            BearerFormat = "JWT",
+            Scheme = "Bearer",
+            Reference = new OpenApiReference()
+            {
+                Id = "Bearer",
+                Type = ReferenceType.SecurityScheme
+            }
+        };
+
+        options.AddSecurityDefinition(securityScheme.Reference.Id, securityScheme);
+
+        // Note: The following configuration will make ALL APIs as protected!
+        // options.AddSecurityRequirement(new OpenApiSecurityRequirement()
+        // {
+        //     { securityScheme, new string[] {} }
+        // });
     }
 }

@@ -19,6 +19,7 @@ public static class ServiceCollectionExtension
         services.AddSwaggerGen(swagger =>
         {
             swagger.UseCustomGeneratorSchemaIds();
+            swagger.SetupSecurityDefinitions();
         });
 
         services
