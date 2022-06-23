@@ -41,7 +41,7 @@ public static class ServiceCollectionExtension
                     ValidateIssuer = true,
                     ValidateAudience = true,
                 };
-            });
+            }); 
 
         // Database config...
         services
@@ -51,10 +51,17 @@ public static class ServiceCollectionExtension
                 ),
                 ServiceLifetime.Singleton
             );
-        
+
         services.AddIdentity<ApplicationUser, ApplicationRole>()
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddDefaultTokenProviders();
+
+        // Identity default configuration...
+        services.Configure<IdentityOptions>(options =>
+        {
+            options.Password.RequiredLength = 8;
+            options.Password.RequiredUniqueChars = 0;
+        });
 
         services.Configure<AppSettings>(configuration);
         services.Configure<JWT>(configuration.GetSection("JWT"));

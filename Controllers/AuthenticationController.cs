@@ -11,6 +11,7 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace ContosoPizza.Controllers;
 
+[ApiController]
 [Route("api/v1/[controller]")]
 [Consumes(MediaTypeNames.Application.Json)]
 [Produces(MediaTypeNames.Application.Json)]
@@ -64,7 +65,7 @@ public class AuthenticationController : ControllerBase
                     );
         }
 
-        return Unauthorized();
+        return Unauthorized(new { Message = "The user doesn't exists!" });
     }
 
     [HttpPost]
@@ -83,7 +84,7 @@ public class AuthenticationController : ControllerBase
         };
         var result = await _userManager.CreateAsync(user, model.Password);
         if (!result.Succeeded)
-            return StatusCode(StatusCodes.Status500InternalServerError, new { Status = "Error", Message = "User creation failed! Please check user details and try again." });
+            return StatusCode(StatusCodes.Status500InternalServerError, new { Status = "Error", Message = "User creation failed! Please check user details and try again.", Details = result.Errors, UserDetail = model });
 
         return Ok(new { Status = "Success", Message = "User created successfully!" });
     }
