@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using ContosoPizza.Extensions.Swagger;
 using System.Text;
+using Microsoft.AspNetCore.Mvc;
 
 namespace ContosoPizza.Extensions.ServiceCollection;
 
@@ -42,7 +43,7 @@ public static class ServiceCollectionExtension
                     ValidateIssuer = true,
                     ValidateAudience = true,
                 };
-            }); 
+            });
 
         // Database config...
         services
@@ -62,6 +63,30 @@ public static class ServiceCollectionExtension
         {
             options.Password.RequiredLength = 8;
             options.Password.RequiredUniqueChars = 0;
+        });
+
+        // configuration to send custom response when the model is not valid
+        services.Configure<ApiBehaviorOptions>(options =>
+        {
+            options.InvalidModelStateResponseFactory = (actionContext) =>
+            {
+                var modelErrors = actionContext
+                    .ModelState
+                    .Select(model =>
+                        new ModelPropertyError()
+                        {
+                            Key = model.Key,
+                            errors = model.Value?.Errors
+                                        .Select(errors => errors.ErrorMessage) ?? new List<string>()
+                        });
+
+                return new BadRequestObjectResult(
+                            new BadRequest<ModelStateError>("One or more validation errors occurred.",
+                                                            new ModelStateError()
+                                                            {
+                                                                errors = modelErrors
+                                                            }));
+            };
         });
 
         services.Configure<AppSettings>(configuration);

@@ -31,6 +31,8 @@ public class AuthenticationController : ControllerBase
 
     [HttpPost]
     [Route("login")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(BaseHttpResponse<LoginResponseDTO>))]
+    [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(BaseHttpResponse))]
     public async Task<IActionResult> Login(LoginRequestDTO model)
     {
         var user = await _userManager.FindByNameAsync(model.Username);
@@ -60,21 +62,33 @@ public class AuthenticationController : ControllerBase
             return Ok(new Ok<LoginResponseDTO>("You're logged in successfully!",
                         new LoginResponseDTO()
                         {
-                            Token = new JwtSecurityTokenHandler().WriteToken(token)
+                            Token = new JwtSecurityTokenHandler().WriteToken(token),
+                            username = model.Username,
+                            roles = userRoles.ToList()
                         })
                     );
         }
 
-        return Unauthorized(new { Message = "The user doesn't exists!" });
+        return NotFound(new NotFound("The user doesn't exists!"));
     }
 
+    /// <summary>
+    /// Create a new user as Guest
+    /// </summary>
+    /// <response code="200">Ok: ser created successfully</response>
+    /// <response code="422">UnprocessableEntity: User creation failed</response>
+    /// <response code="409">Conflict: User already exists!</response>
     [HttpPost]
     [Route("register")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(BaseHttpResponse<RegisterResponseDTO>))]
+    [ProducesResponseType(StatusCodes.Status422UnprocessableEntity, Type = typeof(BaseHttpResponse<RegisterIdentityErrorResponse>))]
+    [ProducesResponseType(StatusCodes.Status409Conflict, Type = typeof(BaseHttpResponse))]
     public async Task<IActionResult> Register(RegisterRequestDTO model)
     {
         var userExists = await _userManager.FindByNameAsync(model.Username);
         if (userExists != null)
-            return StatusCode(StatusCodes.Status500InternalServerError, new { Status = "Error", Message = "User already exists!" });
+            return StatusCode(StatusCodes.Status409Conflict, 
+                             new BaseHttpResponse("User already exists!", StatusCodes.Status409Conflict, false));
 
         ApplicationUser user = new ApplicationUser()
         {
@@ -82,10 +96,24 @@ public class AuthenticationController : ControllerBase
             SecurityStamp = Guid.NewGuid().ToString(),
             UserName = model.Username
         };
+
         var result = await _userManager.CreateAsync(user, model.Password);
         if (!result.Succeeded)
-            return StatusCode(StatusCodes.Status500InternalServerError, new { Status = "Error", Message = "User creation failed! Please check user details and try again.", Details = result.Errors, UserDetail = model });
+            return StatusCode(StatusCodes.Status422UnprocessableEntity,
+                             new BaseHttpResponse<RegisterIdentityErrorResponse>("User creation failed! Please check the details...",
+                                                  StatusCodes.Status422UnprocessableEntity, false,
+                                                  new RegisterIdentityErrorResponse()
+                                                  {
+                                                      RequestedUser = model,
+                                                      errors = result.Errors
+                                                  }));
 
-        return Ok(new { Status = "Success", Message = "User created successfully!" });
+        return Ok(new Ok<RegisterResponseDTO>("User created successfully!",
+                  new RegisterResponseDTO()
+                  {
+                      Id = user.Id,
+                      Email = model.Email,
+                      Username = model.Username
+                  }));
     }
 }

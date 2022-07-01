@@ -88,9 +88,29 @@ public class BadRequest<T> : BaseHttpResponse<T>
     public BadRequest(string message, T? data) : base(message, HttpStatusCode.BadRequest, false, data) { }
 }
 
+public class BadRequest : BaseHttpResponse<object>
+{
+    public BadRequest(string message) : base(message, HttpStatusCode.BadRequest, false) { }
+}
+
 public class Created<T> : BaseHttpResponse<T>
 {
     public Created(string message) : base(message, HttpStatusCode.Created, true) { }
 
     public Created(string message, T? data) : base(message, HttpStatusCode.Created, true, data) { }
+}
+
+public class Unauthorized : BaseHttpResponse<object> {
+    public Unauthorized(string message) : base(message, HttpStatusCode.Unauthorized, false) { }
+}
+
+public class ModelStateError {
+    public bool IsModelStateError { get => true; }
+    public IEnumerable<ModelPropertyError> errors { get; set; } = new List<ModelPropertyError>();
+}
+
+public class ModelPropertyError 
+{
+    public string Key { get; set; } = string.Empty;
+    public IEnumerable<string> errors { get; set; } = new List<string>();
 }

@@ -20,7 +20,7 @@ public static class SwaggerExtensions
                     // Retrieving the generic argument name 
                     // (BaseHttpResponse<Pizza>) in this case is the name of the class of Pizza model
                     string genericTypeName = schema.GenericTypeArguments.FirstOrDefault()?.Name ?? string.Empty;
-                    return $"{genericTypeName}Response";
+                    return $"HttpResponse<{genericTypeName}>";
                 }
             }
 
