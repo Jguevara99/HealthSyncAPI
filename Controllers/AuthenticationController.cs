@@ -75,7 +75,7 @@ public class AuthenticationController : ControllerBase
     /// <summary>
     /// Create a new user as Guest
     /// </summary>
-    /// <response code="200">Ok: ser created successfully</response>
+    /// <response code="200">Ok: User created successfully</response>
     /// <response code="422">UnprocessableEntity: User creation failed</response>
     /// <response code="409">Conflict: User already exists!</response>
     [HttpPost]

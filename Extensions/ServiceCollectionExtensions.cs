@@ -6,6 +6,7 @@ using Microsoft.IdentityModel.Tokens;
 using ContosoPizza.Extensions.Swagger;
 using System.Text;
 using Microsoft.AspNetCore.Mvc;
+using System.Reflection;
 
 namespace ContosoPizza.Extensions.ServiceCollection;
 
@@ -21,6 +22,10 @@ public static class ServiceCollectionExtension
         {
             swagger.UseCustomGeneratorSchemaIds();
             swagger.SetupSecurityDefinitions();
+
+            // Support xml comments for API Documentation.
+            var xmlFileName = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+            swagger.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFileName));
         });
 
         services
