@@ -26,10 +26,13 @@ public static class SwaggerExtensions
 
             // Check if the returned class type has the display name attribute, 
             // then put that name as the swagger schema id
-            // otherwise put the default schema name.
+            // otherwise check if the current name ends with "DTO" and replace it.
             return schema.GetCustomAttributes(false)
                   .OfType<DisplayNameAttribute>()
-                  .FirstOrDefault()?.DisplayName ?? schema.Name;
+                  .FirstOrDefault()?.DisplayName ?? 
+                    (schema.Name.EndsWith("DTO") 
+                        ? schema.Name.Replace("DTO", string.Empty) 
+                        : schema.Name);
         });
     }
 
