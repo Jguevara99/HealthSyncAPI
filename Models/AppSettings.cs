@@ -33,4 +33,15 @@ public class JWT
     public string ValidAudience { get; set; } = string.Empty;
     public string ValidIssuer { get; set; } = string.Empty;
     public string Secret { get; set; } = string.Empty;
+    public JwtExpiryOptions? ExpiryOptions { get; set; }
+
+}
+
+public class JwtExpiryOptions
+{
+    public enum TimeOptions { Days, Hours, Minutes }
+    public static double DefaultExpirationTimeInDays = 1;
+
+    public TimeOptions SetIn { get; set; } = TimeOptions.Days;
+    public double ExpiresIn { get; set; } = DefaultExpirationTimeInDays;
 }

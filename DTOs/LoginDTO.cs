@@ -13,6 +13,8 @@ public class LoginRequestDTO
 public class LoginResponseDTO
 {
     public string username { get; set; } = string.Empty;
+    public string Email { get; set; } = string.Empty;
     public List<string> roles { get; set; } = new List<string>();
     public string Token { get; set; } = string.Empty;
+    public DateTime TokenExpiresIn { get; set; }
 }

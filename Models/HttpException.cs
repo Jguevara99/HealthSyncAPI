@@ -26,15 +26,15 @@ public class HttpException : Exception
     }
 
 
-    public HttpException(string message, int statusCode, object? data): base(message) 
+    public HttpException(string message, int statusCode, object? body): base(message) 
     {
         StatusCode = statusCode;
-        Body = data;
+        Body = body;
     }
     
-    public HttpException(string message, HttpStatusCode statusCode, object? data): base(message) 
+    public HttpException(string message, HttpStatusCode statusCode, object? body): base(message) 
     {
         StatusCode = (int)statusCode;
-        Body = data;
+        Body = body;
     }
 }

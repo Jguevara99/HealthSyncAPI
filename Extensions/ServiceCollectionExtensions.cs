@@ -7,6 +7,7 @@ using ContosoPizza.Extensions.Swagger;
 using System.Text;
 using Microsoft.AspNetCore.Mvc;
 using System.Reflection;
+using ContosoPizza.Services;
 
 namespace ContosoPizza.Extensions.ServiceCollection;
 
@@ -93,6 +94,10 @@ public static class ServiceCollectionExtension
                                                             }));
             };
         });
+
+        // Register custom application dependencies...
+        services.AddScoped<IJwtService, JwtService>();
+        services.AddScoped<IAuthenticationService, AuthenticationService>();
 
         services.Configure<AppSettings>(configuration);
         services.Configure<JWT>(configuration.GetSection("JWT"));
