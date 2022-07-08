@@ -12,10 +12,12 @@ public class AuthenticationService : IAuthenticationService
     private readonly JWT _jwtOptions;
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly RoleManager<ApplicationRole> _roleManager;
+    private readonly IRefreshTokenRepository _refreshTokenRepository;
     private readonly IJwtService _jwtService;
 
     public AuthenticationService(UserManager<ApplicationUser> userManager,
                                  RoleManager<ApplicationRole> roleManager,
+                                 IRefreshTokenRepository refreshTokenRepository,
                                  IJwtService jwtService,
                                  IOptions<JWT> jwtOptions)
     {
@@ -23,6 +25,7 @@ public class AuthenticationService : IAuthenticationService
         _userManager = userManager;
         _roleManager = roleManager;
         _jwtService = jwtService;
+        _refreshTokenRepository = refreshTokenRepository;
     }
 
     public async Task<LoginResponseDTO> Authenticate(string usernameOrEmail, string password)
@@ -42,33 +45,30 @@ public class AuthenticationService : IAuthenticationService
         if (!wrongPassword)
             throw new HttpException("The password is wrong!", StatusCodes.Status400BadRequest);
 
-        IList<string> userRoles = await _userManager.GetRolesAsync(user);
-        var authClaims = new List<Claim>
-        {
-            new Claim(ClaimTypes.Name, user.UserName),
-            new Claim(ClaimTypes.Email, user.Email),
-            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
-        };
+        var claimsRoles = await GetUserClaimsWithRoles(user);
 
-        foreach (string role in userRoles)
-            authClaims.Add(new Claim(ClaimTypes.Role, role));
-
-        Tuple<string, DateTime> tokenInfo = _jwtService.GenerateAccessToken(authClaims);
+        Tuple<string, DateTime> tokenInfo = _jwtService.GenerateAccessToken(claimsRoles.Item1);
+        string refreshToken = _jwtService.GenerateRefreshToken();
+        await CreateRefreshToken(user.Id, refreshToken);
 
         return new LoginResponseDTO
         {
             username = user.UserName,
             Email = user.Email,
-            Token = tokenInfo.Item1,
-            TokenExpiresIn = tokenInfo.Item2,
-            roles = userRoles.ToList()
+            roles = claimsRoles.Item2,
+            Jwt = new JwtAuthDTO
+            {
+                Token = tokenInfo.Item1,
+                TokenExpiresIn = tokenInfo.Item2,
+                RefreshToken = refreshToken
+            }
         };
     }
 
     public async Task<RegisterResponseDTO> RegisterUser(RegisterRequestDTO requestModel)
     {
         var user = await _userManager.FindByNameAsync(requestModel.Username);
-        if (user is null)
+        if (user is not null)
             throw new HttpException("The username already exists!", StatusCodes.Status409Conflict);
 
         ApplicationUser newUser = new ApplicationUser
@@ -97,7 +97,55 @@ public class AuthenticationService : IAuthenticationService
         };
     }
 
-    bool IsValidEmail(string email)
+    public async Task<JwtAuthDTO> RefreshToken(JwtRefreshDTO jwtRefreshModel)
+    {
+        var refreshToken = await _refreshTokenRepository.GetBy(r => r.Token == jwtRefreshModel.RefreshToken);
+        if (refreshToken is null || refreshToken.ExpiryDate <= DateTime.UtcNow)
+            throw new HttpException(
+                        "Invalid refresh token: it doesn't exists or has expired",
+                        StatusCodes.Status403Forbidden);
+
+        var principal = _jwtService.GetPrincipalFromExpiredToken(jwtRefreshModel.Token);
+        ApplicationUser? user = await _userManager.GetUserAsync(principal);
+
+        if (user is null)
+            throw new HttpException("Invalid token: User not found", StatusCodes.Status404NotFound);
+
+        if (!user.Id.Equals(refreshToken.UserId))
+            throw new HttpException("The token & refresh token don't share the same signature", StatusCodes.Status403Forbidden);
+
+        if (!refreshToken.Active)
+        {
+            var activeRefreshTokens = await _refreshTokenRepository.GetActivesByUser(refreshToken.UserId);
+            foreach (var activeTokens in activeRefreshTokens)
+            {
+                activeTokens.Active = false;
+                activeTokens.RevokedAt = DateTime.UtcNow;
+                await _refreshTokenRepository.Update(activeTokens);
+            }
+
+            throw new HttpException("The refresh token has already been used!", StatusCodes.Status403Forbidden);
+        }
+
+        refreshToken.Active = false;
+        refreshToken.RevokedAt = DateTime.UtcNow;
+        await _refreshTokenRepository.Update(refreshToken);
+
+        List<Claim> claims = await GetUserClaims(user);
+        var tokenInfo = _jwtService.GenerateAccessToken(claims);
+
+        string newRefreshToken = _jwtService.GenerateRefreshToken();
+        await CreateRefreshToken(user.Id, newRefreshToken);
+
+        return new JwtAuthDTO
+        {
+            Token = tokenInfo.Item1,
+            RefreshToken = newRefreshToken,
+            TokenExpiresIn = tokenInfo.Item2
+        };
+    }
+
+    private bool IsValidEmail(string email)
     {
         if (string.IsNullOrEmpty(email))
             return false;
@@ -117,10 +165,58 @@ public class AuthenticationService : IAuthenticationService
             return false;
         }
     }
+
+    private async Task<RefreshTokens> CreateRefreshToken(Guid userId, string refreshTokenValue)
+    {
+        var refreshToken = new RefreshTokens
+        {
+            UserId = userId,
+            Active = true,
+            CreatedAt = DateTime.UtcNow,
+            ExpiryDate = DateTime.UtcNow.AddDays(2),
+            Token = refreshTokenValue
+        };
+
+        await _refreshTokenRepository.Add(refreshToken);
+        return refreshToken;
+    }
+
+    private async Task<List<Claim>> GetUserClaims(ApplicationUser user)
+    {
+        IList<string> userRoles = await _userManager.GetRolesAsync(user);
+        var authClaims = new List<Claim>
+        {
+            new Claim(ClaimTypes.Name, user.UserName),
+            new Claim(ClaimTypes.Email, user.Email),
+            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+        };
+
+        foreach (string role in userRoles)
+            authClaims.Add(new Claim(ClaimTypes.Role, role));
+
+        return authClaims;
+    }
+
+    private async Task<Tuple<List<Claim>, List<string>>> GetUserClaimsWithRoles(ApplicationUser user)
+    {
+        IList<string> userRoles = await _userManager.GetRolesAsync(user);
+        var authClaims = new List<Claim>
+        {
+            new Claim(ClaimTypes.Name, user.UserName),
+            new Claim(ClaimTypes.Email, user.Email),
+            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+        };
+
+        foreach (string role in userRoles)
+            authClaims.Add(new Claim(ClaimTypes.Role, role));
+
+        return new Tuple<List<Claim>, List<string>>(authClaims, userRoles.ToList());
+    }
 }
 
 public interface IAuthenticationService
 {
     Task<LoginResponseDTO> Authenticate(string username, string password);
     Task<RegisterResponseDTO> RegisterUser(RegisterRequestDTO requestModel);
+    Task<JwtAuthDTO> RefreshToken(JwtRefreshDTO jwtRefreshModel);
 }

@@ -98,6 +98,7 @@ public static class ServiceCollectionExtension
         // Register custom application dependencies...
         services.AddScoped<IJwtService, JwtService>();
         services.AddScoped<IAuthenticationService, AuthenticationService>();
+        services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
 
         services.Configure<AppSettings>(configuration);
         services.Configure<JWT>(configuration.GetSection("JWT"));

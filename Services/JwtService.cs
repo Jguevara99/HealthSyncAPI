@@ -4,6 +4,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using System.IdentityModel.Tokens.Jwt;
+using System.Security.Cryptography;
 
 namespace ContosoPizza.Services;
 
@@ -60,12 +61,41 @@ public class JwtService : IJwtService
 
     public string GenerateRefreshToken()
     {
-        throw new NotImplementedException();
+        var randomNumber = new byte[64];
+        using (var rng = RandomNumberGenerator.Create())
+        {
+            rng.GetBytes(randomNumber);
+            return Convert.ToBase64String(randomNumber);
+        }
     }
 
     public bool ValidateJwtToken(string token)
     {
         throw new NotImplementedException();
+    }
+
+    public ClaimsPrincipal GetPrincipalFromExpiredToken(string token)
+    {
+        var validationParameters = new TokenValidationParameters
+        {
+            ValidateAudience = true,
+            ValidateIssuer = true,
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(_jwtOptions.Secret)),
+            ValidateLifetime = false // don't validate token's expiration date
+        };
+
+        var tokenHandler = new JwtSecurityTokenHandler();
+        ClaimsPrincipal principal = tokenHandler.ValidateToken(token, validationParameters, out SecurityToken securityToken);
+        var jwtSecurityToken = securityToken as JwtSecurityToken;
+
+        if (jwtSecurityToken is null || !jwtSecurityToken
+                                            .Header.Alg.Equals(
+                                                SecurityAlgorithms.HmacSha256Signature,
+                                                StringComparison.InvariantCultureIgnoreCase))
+            throw new HttpException("Invalid Token", StatusCodes.Status400BadRequest);
+
+        return principal;
     }
 }
 
@@ -75,4 +105,5 @@ public interface IJwtService
     public Tuple<string, DateTime> GenerateAccessToken(List<Claim> claims);
     public bool ValidateJwtToken(string token);
     public string GenerateRefreshToken();
+    public ClaimsPrincipal GetPrincipalFromExpiredToken(string token);
 }
