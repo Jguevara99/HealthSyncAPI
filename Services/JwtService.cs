@@ -76,26 +76,35 @@ public class JwtService : IJwtService
 
     public ClaimsPrincipal GetPrincipalFromExpiredToken(string token)
     {
-        var validationParameters = new TokenValidationParameters
+        try
         {
-            ValidateAudience = true,
-            ValidateIssuer = true,
-            ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(_jwtOptions.Secret)),
-            ValidateLifetime = false // don't validate token's expiration date
-        };
+            var validationParameters = new TokenValidationParameters
+            {
+                ValidateAudience = true,
+                ValidateIssuer = true,
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(_jwtOptions.Secret)),
+                ValidateLifetime = false, // don't validate token's expiration date
+                ValidAudience = _jwtOptions.ValidAudience,
+                ValidIssuer = _jwtOptions.ValidIssuer
+            };
 
-        var tokenHandler = new JwtSecurityTokenHandler();
-        ClaimsPrincipal principal = tokenHandler.ValidateToken(token, validationParameters, out SecurityToken securityToken);
-        var jwtSecurityToken = securityToken as JwtSecurityToken;
+            var tokenHandler = new JwtSecurityTokenHandler();
+            ClaimsPrincipal principal = tokenHandler.ValidateToken(token, validationParameters, out SecurityToken securityToken);
+            var jwtSecurityToken = securityToken as JwtSecurityToken;
 
-        if (jwtSecurityToken is null || !jwtSecurityToken
-                                            .Header.Alg.Equals(
-                                                SecurityAlgorithms.HmacSha256Signature,
-                                                StringComparison.InvariantCultureIgnoreCase))
-            throw new HttpException("Invalid Token", StatusCodes.Status400BadRequest);
+            if (jwtSecurityToken is null || !jwtSecurityToken
+                                                .Header.Alg.Equals(
+                                                    SecurityAlgorithms.HmacSha256Signature,
+                                                    StringComparison.InvariantCultureIgnoreCase))
+                throw new HttpException("Invalid Token", StatusCodes.Status400BadRequest);
 
-        return principal;
+            return principal;
+        }
+        catch (ArgumentException)
+        {
+            throw new HttpException("Invalid token!", StatusCodes.Status400BadRequest);
+        }
     }
 }
 

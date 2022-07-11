@@ -2,6 +2,8 @@ using System.Net.Mime;
 using ContosoPizza.DTOs;
 using ContosoPizza.Models;
 using ContosoPizza.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ContosoPizza.Controllers;
@@ -23,6 +25,7 @@ public class AuthenticationController : ControllerBase
     [Route("login")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(BaseHttpResponse<LoginResponseDTO>))]
     [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(BaseHttpResponse))]
+    [ProducesResponseType(StatusCodes.Status409Conflict, Type = typeof(BaseHttpResponse))]
     public async Task<IActionResult> Login(LoginRequestDTO model)
     {
         var response = await _authenticationService.Authenticate(model.Username, model.Password);
@@ -44,5 +47,32 @@ public class AuthenticationController : ControllerBase
     {
         var response = await _authenticationService.RegisterUser(model);
         return Ok(new Ok<RegisterResponseDTO>("User created successfully!", response));
+    }
+
+    /// <response code="404">Provided user by token not found</response>
+    /// <response code="403">
+    ///     Refresh token: doesn't exists or has expired.<br/>
+    ///     Refresh token: has already been used
+    /// </response>
+    [HttpPost]
+    [Route("refresh-token")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(BaseHttpResponse<JwtAuthDTO>))]
+    [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(BaseHttpResponse))]
+    [ProducesResponseType(StatusCodes.Status403Forbidden, Type = typeof(BaseHttpResponse))]
+    public async Task<IActionResult> RefreshToken(JwtRefreshDTO refreshTokenModel)
+    {
+        var response = await _authenticationService.RefreshToken(refreshTokenModel);
+        return Ok(new Ok<JwtAuthDTO>("Access token updated", response));
+    }
+
+    [HttpPost]
+    [Route("revoke-token")]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(BaseHttpResponse))]
+    [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(BaseHttpResponse))]
+    public async Task<IActionResult> RevokeToken(JwtRefreshDTO refreshTokenModel)
+    {
+        await _authenticationService.RevokeRefreshToken(refreshTokenModel.RefreshToken);
+        return Ok(new Ok("Refresh token revoked successfully!"));
     }
 }

@@ -100,7 +100,7 @@ public class AuthenticationService : IAuthenticationService
     public async Task<JwtAuthDTO> RefreshToken(JwtRefreshDTO jwtRefreshModel)
     {
         var refreshToken = await _refreshTokenRepository.GetBy(r => r.Token == jwtRefreshModel.RefreshToken);
-        if (refreshToken is null || refreshToken.ExpiryDate <= DateTime.UtcNow)
+        if (refreshToken is null || refreshToken.ExpiryDate <= DateTime.Now)
             throw new HttpException(
                         "Invalid refresh token: it doesn't exists or has expired",
                         StatusCodes.Status403Forbidden);
@@ -121,7 +121,7 @@ public class AuthenticationService : IAuthenticationService
             foreach (var activeTokens in activeRefreshTokens)
             {
                 activeTokens.Active = false;
-                activeTokens.RevokedAt = DateTime.UtcNow;
+                activeTokens.RevokedAt = DateTime.Now;
                 await _refreshTokenRepository.Update(activeTokens);
             }
 
@@ -129,7 +129,7 @@ public class AuthenticationService : IAuthenticationService
         }
 
         refreshToken.Active = false;
-        refreshToken.RevokedAt = DateTime.UtcNow;
+        refreshToken.RevokedAt = DateTime.Now;
         await _refreshTokenRepository.Update(refreshToken);
 
         List<Claim> claims = (await GetUserClaimsWithRoles(user)).Item1;
@@ -144,6 +144,18 @@ public class AuthenticationService : IAuthenticationService
             RefreshToken = newRefreshToken,
             TokenExpiresIn = tokenInfo.Item2
         };
+    }
+
+    public async Task<bool> RevokeRefreshToken(string refreshTokenValue)
+    {
+        RefreshTokens? refreshToken = await _refreshTokenRepository.GetBy(r => r.Token == refreshTokenValue);
+        if(refreshToken is null)
+            throw new HttpException("Refresh token doesn't exists!", StatusCodes.Status404NotFound);
+
+        refreshToken.Active = false;
+        refreshToken.RevokedAt = DateTime.Now;
+        await _refreshTokenRepository.Update(refreshToken);
+        return true;
     }
 
     private bool IsValidEmail(string email)
@@ -173,8 +185,8 @@ public class AuthenticationService : IAuthenticationService
         {
             UserId = userId,
             Active = true,
-            CreatedAt = DateTime.UtcNow,
-            ExpiryDate = DateTime.UtcNow.AddDays(2),
+            CreatedAt = DateTime.Now,
+            ExpiryDate = DateTime.Now.AddDays(2),
             Token = refreshTokenValue
         };
 
@@ -207,4 +219,5 @@ public interface IAuthenticationService
     Task<LoginResponseDTO> Authenticate(string username, string password);
     Task<RegisterResponseDTO> RegisterUser(RegisterRequestDTO requestModel);
     Task<JwtAuthDTO> RefreshToken(JwtRefreshDTO jwtRefreshModel);
+    Task<bool> RevokeRefreshToken(string refreshToken);
 }
