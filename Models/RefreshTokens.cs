@@ -17,5 +17,5 @@ public class RefreshTokens
     public DateTime? RevokedAt { get; set; }
 
     public Guid UserId { get; set; }
-    public virtual ApplicationUser User { get; set; }
+    public virtual ApplicationUser User { get; set; } = default!;
 }

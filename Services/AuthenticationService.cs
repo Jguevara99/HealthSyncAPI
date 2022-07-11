@@ -105,7 +105,7 @@ public class AuthenticationService : IAuthenticationService
                         "Invalid refresh token: it doesn't exists or has expired",
                         StatusCodes.Status403Forbidden);
 
-        var principal = _jwtService.GetPrincipalFromExpiredToken(jwtRefreshModel.Token);
+        ClaimsPrincipal principal = _jwtService.GetPrincipalFromExpiredToken(jwtRefreshModel.Token);
         ApplicationUser? user = await _userManager.GetUserAsync(principal);
 
         if (user is null)
@@ -117,6 +117,7 @@ public class AuthenticationService : IAuthenticationService
         if (!refreshToken.Active)
         {
             var activeRefreshTokens = await _refreshTokenRepository.GetActivesByUser(refreshToken.UserId);
+            // remove all sessions...
             foreach (var activeTokens in activeRefreshTokens)
             {
                 activeTokens.Active = false;
@@ -131,7 +132,7 @@ public class AuthenticationService : IAuthenticationService
         refreshToken.RevokedAt = DateTime.UtcNow;
         await _refreshTokenRepository.Update(refreshToken);
 
-        List<Claim> claims = await GetUserClaims(user);
+        List<Claim> claims = (await GetUserClaimsWithRoles(user)).Item1;
         var tokenInfo = _jwtService.GenerateAccessToken(claims);
 
         string newRefreshToken = _jwtService.GenerateRefreshToken();
@@ -181,30 +182,17 @@ public class AuthenticationService : IAuthenticationService
         return refreshToken;
     }
 
-    private async Task<List<Claim>> GetUserClaims(ApplicationUser user)
-    {
-        IList<string> userRoles = await _userManager.GetRolesAsync(user);
-        var authClaims = new List<Claim>
-        {
-            new Claim(ClaimTypes.Name, user.UserName),
-            new Claim(ClaimTypes.Email, user.Email),
-            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
-        };
-
-        foreach (string role in userRoles)
-            authClaims.Add(new Claim(ClaimTypes.Role, role));
-
-        return authClaims;
-    }
-
     private async Task<Tuple<List<Claim>, List<string>>> GetUserClaimsWithRoles(ApplicationUser user)
     {
+        string userId = user.Id.ToString();
         IList<string> userRoles = await _userManager.GetRolesAsync(user);
         var authClaims = new List<Claim>
         {
             new Claim(ClaimTypes.Name, user.UserName),
             new Claim(ClaimTypes.Email, user.Email),
-            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+            new Claim(ClaimTypes.Sid, userId),
+            new Claim(JwtRegisteredClaimNames.Sub, userId)
         };
 
         foreach (string role in userRoles)
