@@ -1,13 +1,12 @@
 using System.Net.Mime;
 using ContosoPizza.Models;
 using ContosoPizza.Services;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ContosoPizza.Controllers;
 
-[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+[Authorize]
 [ApiController]
 [Route("api/v1/[controller]")]
 [Consumes(MediaTypeNames.Application.Json)]

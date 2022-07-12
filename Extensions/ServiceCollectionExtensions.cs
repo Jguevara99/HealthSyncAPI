@@ -8,6 +8,7 @@ using System.Text;
 using Microsoft.AspNetCore.Mvc;
 using System.Reflection;
 using ContosoPizza.Services;
+using Microsoft.AspNetCore.Authorization;
 
 namespace ContosoPizza.Extensions.ServiceCollection;
 
@@ -50,6 +51,15 @@ public static class ServiceCollectionExtension
                     ValidateAudience = true,
                 };
             });
+
+        // setting up default authorization policy: authentication schemas (Bearer)
+        services.AddAuthorization(options =>
+        {
+            options.DefaultPolicy = new AuthorizationPolicyBuilder()
+                                            .AddAuthenticationSchemes(JwtBearerDefaults.AuthenticationScheme)
+                                            .RequireAuthenticatedUser()
+                                            .Build();
+        });
 
         // Database config...
         services
@@ -97,7 +107,7 @@ public static class ServiceCollectionExtension
 
         // Register custom application dependencies...
         services.AddScoped<IJwtService, JwtService>();
-        services.AddScoped<IAuthenticationService, AuthenticationService>();
+        services.AddScoped<ContosoPizza.Services.IAuthenticationService, ContosoPizza.Services.AuthenticationService>();
         services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
 
         services.Configure<AppSettings>(configuration);

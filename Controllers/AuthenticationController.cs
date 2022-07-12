@@ -66,8 +66,8 @@ public class AuthenticationController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize]
     [Route("revoke-token")]
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(BaseHttpResponse))]
     [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(BaseHttpResponse))]
     public async Task<IActionResult> RevokeToken(JwtRefreshDTO refreshTokenModel)
