@@ -109,6 +109,7 @@ public static class ServiceCollectionExtension
         services.AddScoped<IJwtService, JwtService>();
         services.AddScoped<ContosoPizza.Services.IAuthenticationService, ContosoPizza.Services.AuthenticationService>();
         services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
+        services.AddTransient<IDatabaseSeeder, DatabaseSeeder>();
 
         services.Configure<AppSettings>(configuration);
         services.Configure<JWT>(configuration.GetSection("JWT"));
