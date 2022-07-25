@@ -8,11 +8,13 @@ public class SwaggerAuthorizationOperationFilter : IOperationFilter
 {
     public void Apply(OpenApiOperation operation, OperationFilterContext context)
     {
-        var ieAuthAttributes = context.MethodInfo.DeclaringType?.GetCustomAttributes(true)
-                                                                .Union(context.MethodInfo.GetCustomAttributes(true))
+        object[] methodAttributes = context.MethodInfo.GetCustomAttributes(true);
+        object[] controllerAttributes = context.MethodInfo.DeclaringType?.GetCustomAttributes(true) ?? new object[0];
+        IEnumerable<AuthorizeAttribute> ieAuthAttributes = controllerAttributes
+                                                                .Union(methodAttributes)
                                                                 .OfType<AuthorizeAttribute>();
 
-        if (!(ieAuthAttributes != null && ieAuthAttributes.Count() > 0)) return;
+        if (!(!ieAuthAttributes.IsEmpty() && methodAttributes.OfType<AllowAnonymousAttribute>().IsEmpty())) return;
 
         var authAttribute = ieAuthAttributes.ToList().First();
 
@@ -34,4 +36,9 @@ public class SwaggerAuthorizationOperationFilter : IOperationFilter
             new OpenApiSecurityRequirement() { { securityScheme, securityPolicies } }
         };
     }
+}
+
+public static class IEnumerableExtensions
+{
+    public static bool IsEmpty<T>(this IEnumerable<T> ienumerable) => !(ienumerable.Count() > 0);
 }
