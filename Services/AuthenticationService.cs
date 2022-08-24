@@ -1,6 +1,7 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using ContosoPizza.DTOs;
+using ContosoPizza.Extensions.Claims;
 using ContosoPizza.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
@@ -149,7 +150,7 @@ public class AuthenticationService : IAuthenticationService
     public async Task<bool> RevokeRefreshToken(string refreshTokenValue)
     {
         RefreshTokens? refreshToken = await _refreshTokenRepository.GetBy(r => r.Token == refreshTokenValue);
-        if(refreshToken is null)
+        if (refreshToken is null)
             throw new HttpException("Refresh token doesn't exists!", StatusCodes.Status404NotFound);
 
         refreshToken.Active = false;
@@ -198,19 +199,27 @@ public class AuthenticationService : IAuthenticationService
     {
         string userId = user.Id.ToString();
         IList<string> userRoles = await _userManager.GetRolesAsync(user);
-        var authClaims = new List<Claim>
+
+        List<Claim> permissionClaims = new List<Claim>();
+        List<Claim> roleClaims = new List<Claim>();
+        foreach (string role in userRoles)
+        {
+            roleClaims.Add(new Claim(ClaimTypes.Role, role));
+            IList<Claim> allPermissionClaims4Role = await _roleManager.GetRoleClaimsAsync(role);
+            permissionClaims.AddRange(allPermissionClaims4Role);
+        }
+
+        IEnumerable<Claim> authClaims = new List<Claim>
         {
             new Claim(ClaimTypes.Name, user.UserName),
             new Claim(ClaimTypes.Email, user.Email),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
             new Claim(ClaimTypes.Sid, userId),
             new Claim(JwtRegisteredClaimNames.Sub, userId)
-        };
+        }.Union(roleClaims)
+         .Union(permissionClaims);
 
-        foreach (string role in userRoles)
-            authClaims.Add(new Claim(ClaimTypes.Role, role));
-
-        return new Tuple<List<Claim>, List<string>>(authClaims, userRoles.ToList());
+        return new Tuple<List<Claim>, List<string>>(authClaims.ToList(), userRoles.ToList());
     }
 }
 

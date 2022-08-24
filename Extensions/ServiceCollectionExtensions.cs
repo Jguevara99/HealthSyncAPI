@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.Reflection;
 using ContosoPizza.Services;
 using Microsoft.AspNetCore.Authorization;
+using ContosoPizza.Shared.Constants;
 
 namespace ContosoPizza.Extensions.ServiceCollection;
 
@@ -55,6 +56,17 @@ public static class ServiceCollectionExtension
         // setting up default authorization policy: authentication schemas (Bearer)
         services.AddAuthorization(options =>
         {
+            Type[] nestedTypes = typeof(Permissions).GetNestedTypes();
+            foreach (FieldInfo field in nestedTypes
+                                    .SelectMany(t =>
+                                        t.GetFields(BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy)
+                                    ))
+            {
+                string fieldValue = field.GetValue(null)?.ToString() ?? string.Empty;
+                if (!String.IsNullOrEmpty(fieldValue))
+                    options.AddPolicy(fieldValue, policy => policy.RequireClaim(ApplicationClaimTypes.Permission, fieldValue).AddAuthenticationSchemes(JwtBearerDefaults.AuthenticationScheme).RequireAuthenticatedUser());
+            }
+
             options.DefaultPolicy = new AuthorizationPolicyBuilder()
                                             .AddAuthenticationSchemes(JwtBearerDefaults.AuthenticationScheme)
                                             .RequireAuthenticatedUser()

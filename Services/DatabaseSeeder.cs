@@ -25,6 +25,8 @@ public class DatabaseSeeder : IDatabaseSeeder
     {
         await SeedDefaultRoles();
         await SeedSuperAdminUser();
+        await SeedCustomer();
+        await SeedAdministrator();
     }
 
     private async Task SeedSuperAdminUser()
@@ -44,6 +46,42 @@ public class DatabaseSeeder : IDatabaseSeeder
 
         await _userManager.CreateAsync(adminUser, password);
         await _userManager.AddToRoleAsync(adminUser, Roles.SuperAdmin);
+    }
+
+    private async Task SeedCustomer()
+    {
+        const string password = "Gen3ricP@ssword";
+        var customer = new ApplicationUser()
+        {
+            Email = "customer00@gmail.com",
+            UserName = "GenericUsername",
+            EmailConfirmed = true
+        };
+
+        if ((await _userManager.FindByEmailAsync(customer.Email)) is not null &&
+            (await _userManager.FindByNameAsync(customer.UserName)) is not null)
+            return;
+
+        await _userManager.CreateAsync(customer, password);
+        await _userManager.AddToRoleAsync(customer, Roles.Customer);
+    }
+
+    private async Task SeedAdministrator()
+    {
+        const string password = "Gen3ricP@ssword";
+        var administrator = new ApplicationUser()
+        {
+            Email = "admin@gmail.com",
+            UserName = "AdminUsername",
+            EmailConfirmed = true
+        };
+
+        if ((await _userManager.FindByEmailAsync(administrator.Email)) is not null &&
+            (await _userManager.FindByNameAsync(administrator.UserName)) is not null)
+            return;
+
+        await _userManager.CreateAsync(administrator, password);
+        await _userManager.AddToRoleAsync(administrator, Roles.Administrator);
     }
 
     private async Task SeedDefaultRoles()

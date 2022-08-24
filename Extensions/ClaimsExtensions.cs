@@ -15,4 +15,10 @@ public static class ClaimsExtensions
 
         return IdentityResult.Failed();
     }
+
+    public static async Task<IList<Claim>> GetRoleClaimsAsync(this RoleManager<ApplicationRole> roleManager, string role)
+    {
+        ApplicationRole appRole = await roleManager.FindByNameAsync(role);
+        return (await roleManager.GetClaimsAsync(appRole));
+    }
 }
