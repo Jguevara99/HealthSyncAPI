@@ -10,6 +10,7 @@ using System.Reflection;
 using ContosoPizza.Services;
 using Microsoft.AspNetCore.Authorization;
 using ContosoPizza.Shared.Constants;
+using System.Net.Mime;
 
 namespace ContosoPizza.Extensions.ServiceCollection;
 
@@ -50,6 +51,41 @@ public static class ServiceCollectionExtension
                     ValidIssuer = jwt.ValidIssuer,
                     ValidateIssuer = true,
                     ValidateAudience = true,
+                };
+
+                options.Events = new JwtBearerEvents()
+                {
+                    OnAuthenticationFailed = (context) =>
+                    {
+                        if (context.Exception is SecurityTokenExpiredException)
+                        {
+                            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                            context.Response.ContentType = MediaTypeNames.Application.Json;
+                            return context.Response.WriteAsJsonAsync(new Unauthorized("The token is expired!"));
+                        }
+
+                        context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+                        context.Response.ContentType = MediaTypeNames.Application.Json;
+                        return context.Response.WriteAsJsonAsync(new Unauthorized("An unhandled error has ocurred!"));
+                    },
+                    OnChallenge = (context) =>
+                    {
+                        context.HandleResponse();
+                        if (!context.Response.HasStarted)
+                        {
+                            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                            context.Response.ContentType = MediaTypeNames.Application.Json;
+                            return context.Response.WriteAsJsonAsync(new Unauthorized("You are not Authorized."));
+                        }
+
+                        return Task.CompletedTask;
+                    },
+                    OnForbidden = (context) =>
+                    {
+                        context.Response.StatusCode = StatusCodes.Status403Forbidden;
+                        context.Response.ContentType = MediaTypeNames.Application.Json;
+                        return context.Response.WriteAsJsonAsync(new BaseHttpResponse("You are not authorized to access this resource.", StatusCodes.Status403Forbidden, false));
+                    }
                 };
             });
 
