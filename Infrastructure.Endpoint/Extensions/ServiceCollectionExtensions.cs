@@ -6,11 +6,9 @@ using Infrastructure.Endpoint.Repositories;
 using Infrastructure.Endpoint.Services;
 using Infrastructure.Endpoint.Shared;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using System.Runtime.CompilerServices;
 
 namespace Infrastructure.Endpoint.Extensions;
 
