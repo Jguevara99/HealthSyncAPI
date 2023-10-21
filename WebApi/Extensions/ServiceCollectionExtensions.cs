@@ -1,15 +1,10 @@
-﻿using Application.Endpoint.Services;
-using Domain.Endpoint.Interfaces.Repositories;
-using Infrastructure.Endpoint.Identity;
-using Infrastructure.Endpoint.Repositories;
-using Infrastructure.Endpoint.Services;
+﻿using Application.Endpoint.DTOs;
 using Infrastructure.Endpoint.Shared;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using System.Net.Mime;
 using System.Reflection;
 using System.Text;
 
@@ -110,26 +105,6 @@ public static class ServiceCollectionExtension
                                             .Build();
         });
 
-        // Database config...
-        services
-            .AddDbContext<ApplicationDbContext>(options =>
-                options.UseSqlServer(
-                    configuration.GetConnectionString("DefaultConnection")
-                ),
-                ServiceLifetime.Singleton
-            );
-
-        services.AddIdentity<ApplicationUser, ApplicationRole>()
-                .AddEntityFrameworkStores<ApplicationDbContext>()
-                .AddDefaultTokenProviders();
-
-        // Identity default configuration...
-        services.Configure<IdentityOptions>(options =>
-        {
-            options.Password.RequiredLength = 8;
-            options.Password.RequiredUniqueChars = 0;
-        });
-
         // configuration to send custom response when the model is not valid
         services.Configure<ApiBehaviorOptions>(options =>
         {
@@ -141,27 +116,17 @@ public static class ServiceCollectionExtension
                         new ModelPropertyError()
                         {
                             Key = model.Key,
-                            errors = model.Value?.Errors
-                                        .Select(errors => errors.ErrorMessage) ?? new List<string>()
+                            errors = model.Value?.Errors.Select(errors => errors.ErrorMessage) ?? new List<string>()
                         });
+                var modelStateError = new ModelStateError()
+                {
+                    errors = modelErrors
+                };
 
-                return new BadRequestObjectResult(
-                            new BadRequest<ModelStateError>("One or more validation errors occurred.",
-                                                            new ModelStateError()
-                                                            {
-                                                                errors = modelErrors
-                                                            }));
+                var badRequest = new BadRequest<ModelStateError>("One or more validation errors occurred.", modelStateError);
+                return new BadRequestObjectResult(badRequest);
             };
         });
-
-        // Register custom application dependencies...
-        services.AddScoped<IJwtService, JwtService>();
-        services.AddScoped<ContosoPizza.Services.IAuthenticationService, ContosoPizza.Services.AuthenticationService>();
-        services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
-        services.AddTransient<IDatabaseSeeder, DatabaseSeeder>();
-
-        services.Configure<AppSettings>(configuration);
-        services.Configure<JWT>(configuration.GetSection("JWT"));
 
         return services;
     }

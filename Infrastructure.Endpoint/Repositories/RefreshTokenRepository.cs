@@ -1,5 +1,7 @@
 ﻿using Domain.Endpoint.Entities;
 using Domain.Endpoint.Interfaces.Repositories;
+using Infrastructure.Endpoint.Data;
+using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 
 namespace Infrastructure.Endpoint.Repositories;
