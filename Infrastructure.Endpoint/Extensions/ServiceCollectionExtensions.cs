@@ -40,7 +40,7 @@ public static class ServiceCollectionExtensions
         //services.AddTransient<IDatabaseSeeder, DatabaseSeeder>();
 
         services.Configure<AppSettings>(configuration);
-        services.Configure<JWT>(configuration.GetSection("JWT"));
+        services.Configure<JWT>(configuration.GetSection("JWT"));        
 
         return services;
     }

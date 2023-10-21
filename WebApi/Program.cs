@@ -1,6 +1,8 @@
 using WebApi.Extensions;
 using Infrastructure.Endpoint.Extensions;
 using WebApi.Middlewares;
+using Infrastructure.Endpoint.Data;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,6 +22,14 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
+}
+
+if (app.Environment.IsProduction())
+{
+    using (var scope = app.Services.GetService<IServiceScopeFactory>()?.CreateScope())
+    {
+        scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().Database.Migrate();
+    }
 }
 
 app.UseMiddleware<GlobalExceptionMiddleware>();
