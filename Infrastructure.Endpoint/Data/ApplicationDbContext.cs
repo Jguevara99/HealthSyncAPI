@@ -17,6 +17,10 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, Applicati
     }
 
     public DbSet<RefreshToken> RefreshToken { get; set; } = default!;
+    public DbSet<Department> Department { get; set; } = default!;
+    public DbSet<Doctor> Doctor { get; set; } = default!;
+    public DbSet<Patient> Patient { get; set; } = default!;
+    public DbSet<Specialty> Specialty { get; set; } = default!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -130,6 +134,27 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, Applicati
             //      .HasForeignKey(fk => fk.UserId)
             //      .IsRequired();
             // entity.Property(e => e.UserId).HasConversion<string>();
+        });
+
+        modelBuilder.Entity<Department>(entity =>
+        {
+            entity.ToTable("Departments");
+            entity.HasKey(e => e.Id);
+        });
+        modelBuilder.Entity<Doctor>(entity =>
+        {
+            entity.ToTable("Doctors");
+            entity.HasKey(e => e.Id);
+        });
+        modelBuilder.Entity<Patient>(entity =>
+        {
+            entity.ToTable("Patients");
+            entity.HasKey(e => e.Id);
+        });
+        modelBuilder.Entity<Specialty>(entity =>
+        {
+            entity.ToTable("Specialtys");
+            entity.HasKey(e => e.Id);
         });
     }
 }

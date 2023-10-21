@@ -8,5 +8,7 @@
         public string Email { get; set; } = string.Empty;
         public Guid SpecialtyId { get; set; }
         public Guid DeparmentId { get; set; }
+        public virtual Department Department { get; set; }
+        public virtual Specialty Specialty { get; set; }
     }
 }
