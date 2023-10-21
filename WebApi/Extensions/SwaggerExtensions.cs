@@ -1,5 +1,7 @@
-﻿using Microsoft.OpenApi.Models;
+﻿using Application.Endpoint.DTOs;
+using Microsoft.OpenApi.Models;
 using System.ComponentModel;
+using WebApi.Filters;
 using SwaggerNamespace = Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace WebApi.Extensions;
@@ -12,7 +14,7 @@ public static class SwaggerExtensions
         {
             if (schema.IsGenericType)
             {
-                string baseClassName = typeof(ContosoPizza.Models.BaseHttpResponse<object>).Name;
+                string baseClassName = typeof(BaseHttpResponse<object>).Name;
                 // Set custom schema id for http response generic model
                 if (schema.Name.Equals(baseClassName))
                 {
