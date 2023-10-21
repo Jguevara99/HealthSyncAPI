@@ -1,12 +1,13 @@
-using ContosoPizza.Models;
+﻿using Application.Endpoint.DTOs;
+using Infrastructure.Endpoint.Shared;
 
-namespace ContosoPizza.Middlewares;
+namespace WebApi.Middlewares;
 
-public class ExceptionHandlerMiddleware
+public class GlobalExceptionMiddleware
 {
     private readonly RequestDelegate _next;
 
-    public ExceptionHandlerMiddleware(RequestDelegate next)
+    public GlobalExceptionMiddleware(RequestDelegate next)
     {
         _next = next;
     }
@@ -33,8 +34,8 @@ public class ExceptionHandlerMiddleware
                     context.Response.StatusCode = 500;
                     await context.Response
                                  .WriteAsJsonAsync<BaseHttpResponse>(
-                                     new BaseHttpResponse(error.Message, 
-                                                          System.Net.HttpStatusCode.InternalServerError, 
+                                     new BaseHttpResponse(error.Message,
+                                                          System.Net.HttpStatusCode.InternalServerError,
                                                           false, error.Data)
                                     );
                     break;

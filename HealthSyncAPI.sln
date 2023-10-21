@@ -3,8 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.7.34031.279
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ContosoPizza", "ContosoPizza.csproj", "{BC979B0D-47D4-4756-9D63-9ECEAD77B330}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "1. Presentation", "1. Presentation", "{8F175326-2033-4AE4-B709-FE0A6E2BEB56}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "3. Domain", "3. Domain", "{EC4DB764-AD9B-44A4-8782-E7C4175C1FB7}"
@@ -21,7 +19,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Domain.Endpoint", "Domain.E
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Infrastructure.Endpoint", "Infrastructure.Endpoint\Infrastructure.Endpoint.csproj", "{F8D1879B-21C2-4E83-B709-721E142E4CCC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Infrastructure.Endpoint.Shared", "..\Infrastructure.Shared\Infrastructure.Endpoint.Shared.csproj", "{3A9620B3-988C-46EC-9B3D-D1F469FE2E35}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Infrastructure.Endpoint.Shared", "..\Infrastructure.Shared\Infrastructure.Endpoint.Shared.csproj", "{3A9620B3-988C-46EC-9B3D-D1F469FE2E35}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -29,10 +27,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{BC979B0D-47D4-4756-9D63-9ECEAD77B330}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{BC979B0D-47D4-4756-9D63-9ECEAD77B330}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{BC979B0D-47D4-4756-9D63-9ECEAD77B330}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{BC979B0D-47D4-4756-9D63-9ECEAD77B330}.Release|Any CPU.Build.0 = Release|Any CPU
 		{993CF1C5-1415-4600-AF25-88E4CDB18DF8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{993CF1C5-1415-4600-AF25-88E4CDB18DF8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{993CF1C5-1415-4600-AF25-88E4CDB18DF8}.Release|Any CPU.ActiveCfg = Release|Any CPU
