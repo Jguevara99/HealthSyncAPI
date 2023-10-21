@@ -50,3 +50,13 @@ send an http post request with json body
 ```powershell
 post -c "{"name":"Hawaii", "isGlutenFree":false}"
 ```
+
+Add a new migration
+```powershell
+dotnet ef --startup-project .\WebApi\ migrations add InitialMigration --project .\Infrastructure.Endpoint\ -o ./Data/Migrations
+```
+
+Update the database
+```powershell
+dotnet ef --startup-project .\WebApi\ database update --project .\Infrastructure.Endpoint\
+```
