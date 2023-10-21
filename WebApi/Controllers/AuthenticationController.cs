@@ -1,4 +1,7 @@
 using System.Net.Mime;
+using Application.Endpoint.DTOs;
+using Application.Endpoint.Services;
+using HealthSyncAPI.Application.Endpoints.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 

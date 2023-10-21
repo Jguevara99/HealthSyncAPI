@@ -1,4 +1,4 @@
-﻿namespace Infrastructure.Endpoint;
+﻿namespace Infrastructure.Endpoint.Extensions;
 
 public static class ServiceCollectionExtensions
 {

@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Identity;
 using System.ComponentModel.DataAnnotations;
 
 namespace HealthSyncAPI.Application.Endpoints.DTOs;
